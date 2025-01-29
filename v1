@@ -1,0 +1,306 @@
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/BlizTBr/scripts/main/Orion%20X')))()
+
+local Window = OrionLib:MakeWindow({
+    Name = "joker hub",
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "Orion"
+})
+
+local GrabTab = Window:MakeTab({Name = "blob man", Icon =  "rbxassetid://4483345998", PremiumOnly = false})
+
+
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+
+local blobalter = 1
+local function blobGrabPlayer(player, blobman)
+if blobalter == 1 then
+if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+local args = {
+[1] = blobman:FindFirstChild("LeftDetector"),
+[2] = player.Character:FindFirstChild("HumanoidRootPart"),
+[3] = blobman:FindFirstChild("LeftDetector"):FindFirstChild("LeftWeld")
+}
+blobman:WaitForChild("BlobmanSeatAndOwnerScript"):WaitForChild("CreatureGrab"):FireServer(unpack(args))
+blobalter = 1
+end
+else
+if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+local args = {
+[1] = blobman:FindFirstChild("RightDetector"),
+[2] = player.Character:FindFirstChild("HumanoidRootPart"),
+[3] = blobman:FindFirstChild("RightDetector"):FindFirstChild("RightWeld")
+}
+blobman:WaitForChild("BlobmanSeatAndOwnerScript"):WaitForChild("CreatureGrab"):FireServer(unpack(args))
+blobalter = 1
+end
+end
+end
+local function isDescendantOf(target, other)
+local currentParent = target.Parent
+while currentParent do
+if currentParent == other then
+return true
+end
+currentParent = currentParent.Parent
+end
+ return false
+end
+local localPlayer = Players.LocalPlayer
+local playerCharacter = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+localPlayer.CharacterAdded:Connect(function(character)
+playerCharacter = character
+end)
+local blobman1
+
+blobman1 = GrabTab:AddToggle({
+    Name = "Destroy Server(left hand)",
+    Color = Color3.fromRGB(123, 255, 255),
+    Default = false,
+    Callback = function(enabled)
+if enabled then
+blobmanCoroutine = coroutine.create(function()
+local foundBlobman = false
+for i, v in pairs(game.Workspace:GetDescendants()) do
+if v.Name == "CreatureBlobman" then
+if v:FindFirstChild("VehicleSeat") and v.VehicleSeat:FindFirstChild("SeatWeld") and isDescendantOf(v.VehicleSeat.SeatWeld.Part1, localPlayer.Character) then
+blobman = v
+foundBlobman = true
+break
+end
+end
+end
+if not foundBlobman then
+blobman1:Set(false)
+blobman = nil
+coroutine.close(blobmanCoroutine)
+blobmanCoroutine = nil
+return
+end
+while true do
+pcall(function()
+while wait() do
+for i, v in pairs(Players:GetChildren()) do
+if blobman and v ~= localPlayer then
+blobGrabPlayer(v, blobman)
+wait(G_d)
+end
+end
+end
+end)
+wait(G_d)
+end
+end)
+coroutine.resume(blobmanCoroutine)
+else
+if blobmanCoroutine then
+coroutine.close(blobmanCoroutine)
+blobmanCoroutine = nil
+blobman = nil
+end
+end
+    end
+})
+
+blobman1 = GrabTab:AddToggle({
+    Name = "Destroy Server (Right Hand)",
+    Color = Color3.fromRGB(123, 255, 255),
+    Default = false,
+    Callback = function(enabled)
+        if enabled then
+            blobmanCoroutine = coroutine.create(function()
+                local foundBlobman = false
+                for i, v in pairs(game.Workspace:GetDescendants()) do
+                    if v.Name == "CreatureBlobman" then
+                        if v:FindFirstChild("VehicleSeat") and v.VehicleSeat:FindFirstChild("SeatWeld") and isDescendantOf(v.VehicleSeat.SeatWeld.Part1, localPlayer.Character) then
+                            blobman = v
+                            foundBlobman = true
+                            break
+                        end
+                    end
+                end
+
+                if not foundBlobman then
+                    blobman1:Set(false)
+                    blobman = nil
+                    coroutine.close(blobmanCoroutine)
+                    blobmanCoroutine = nil
+                    return
+                end
+
+                while true do
+                    pcall(function()
+                        for _, v in pairs(Players:GetChildren()) do
+                            if blobman and v ~= localPlayer then
+                                -- Blobmanの右手でプレイヤーを掴む
+                                if v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                                    local args = {
+                                        [1] = blobman:FindFirstChild("RightDetector"), -- 右手の検知器
+                                        [2] = v.Character:FindFirstChild("HumanoidRootPart"), -- プレイヤーの体
+                                        [3] = blobman:FindFirstChild("RightDetector"):FindFirstChild("RightWeld") -- 右手のWeld
+                                    }
+                                    blobman:WaitForChild("BlobmanSeatAndOwnerScript"):WaitForChild("CreatureGrab"):FireServer(unpack(args))
+                                    wait(G_d)
+                                end
+                            end
+                        end
+                    end)
+                    wait(G_d) -- G_d の値で処理間隔を調整
+                end
+            end)
+            coroutine.resume(blobmanCoroutine)
+        else
+            if blobmanCoroutine then
+                coroutine.close(blobmanCoroutine)
+                blobmanCoroutine = nil
+                blobman = nil
+            end
+        end
+    end
+})
+
+
+GrabTab:AddSlider({
+    Name = "Grab Interval (seconds)",
+    Min = 0.000001, -- 最小値を極小値に設定
+    Max = 1.0, -- 最大値
+    Default = G_d,
+    Color = Color3.fromRGB(123, 255, 255),
+    Increment = 0.000001, -- 極小間隔で調整可能
+    Callback = function(value)
+        G_d = value
+        print("Grab Interval 更新: " .. tostring(G_d))
+    end
+})
+
+local scriptTab = Window:MakeTab({
+    Name = "script",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+scriptTab:AddButton({
+    Name = "Bliz crack(pc)",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/chaosscripter/cracks/m/blitz"))()
+    end
+})
+
+scriptTab:AddButton({
+    Name = "VHS crack",
+    Callback = function()
+        loadstring(game:HttpGet("https://you.whimper.xyz/vhs.lua"))()
+    end
+})
+
+scriptTab:AddButton({
+    Name = "Ninja hub",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/biel99lol/My-scripts/refs/heads/main/Ninja%20hub%20(FTAP)%20update", true))()
+    end
+})
+
+scriptTab:AddButton({
+    Name = "suu script(mobile)",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/jadpy/suki/refs/heads/main/iyan.1"))()
+    end
+})
+
+scriptTab:AddButton({
+    Name = "auto無敵",
+    Callback = function()
+        loadstring(game:HttpGet("https://pastebin.com/raw/KNHTCvHp"))()
+    end
+})
+
+scriptTab:AddButton({
+    Name = "Anti hub",
+    Callback = function()
+        loadstring(game:HttpGet("https://pastebin.com/raw/Y4x25FE6"))()
+    end
+})
+
+scriptTab:AddButton({
+    Name = "SB(System Broken)",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/H20CalibreYT/SystemBroken/main/script"))()
+    end
+})
+
+scriptTab:AddButton({
+    Name = "IY(infiniteyield)",
+    Callback = function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+    end
+})
+
+local scriptTab = Window:MakeTab({
+    Name = "Goat Script",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+scriptTab:AddButton({
+    Name = "Bliz Premium",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/BlizTBr/scripts/main/FTAP%20(Modified).lua"))()
+    end
+})
+
+scriptTab:AddButton({
+    Name = "VHS Premium",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/fgdergewrgegr/SVH/main/VHSV6"))()
+    end
+})
+
+scriptTab:AddButton({
+    Name = "Alpha_SPD",
+    Callback = function()
+        
+    end
+})
+
+scriptTab:AddButton({
+    Name = "CL hub",
+    Callback = function()
+        
+    end
+})
+
+scriptTab:AddButton({
+    Name = "orera hub",
+    Callback = function()
+        
+    end
+})
+
+local ChatTab = Window:MakeTab({
+    Name = "Chat Spam",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+local ChatBox = ""
+
+ChatTab:AddTextbox({
+    Name = "メッセージ入力",
+    Default = "",
+    TextDisappear = false,
+    Callback = function(value)
+        ChatBox = value
+    end
+})
+
+ChatTab:AddButton({
+    Name = "Send Chat",
+    Callback = function()
+        if ChatBox ~= "" then
+            game.ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(ChatBox, "All")
+        end
+    end
+})
+
+OrionLib:Init()
